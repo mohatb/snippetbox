@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
 
 	"github.com/mohatb/snippetbox/pkg/handlers"
 )
@@ -19,6 +20,18 @@ func main() {
 	mux.HandleFunc("/about", handlers.About)
 	mux.HandleFunc("/snippet", handlers.ShowSnippet)
 	mux.HandleFunc("/snippet/create", handlers.CreateSnippet)
+
+	// Use log.New() to create a logger for writing information messages. This takes
+	// three parameters: the destination to write the logs to (os.Stdout), a string
+	// prefix for message (INFO followed by a tab), and flags to indicate what
+	// additional information to include (local date and time). Note that the flags
+	// are joined using the bitwise OR operator |.
+	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+
+	// Create a logger for writing error messages in the same way, but use stderr as
+	// the destination and use the log.Lshortfile flag to include the relevant
+	// file name and line number.
+	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
 	// Create a file server which serves files out of the "./ui/static" directory.
 	// Note that the path given to the http.Dir function is relative to the project
@@ -46,7 +59,9 @@ func main() {
 	ipAddress := conn.LocalAddr().(*net.UDPAddr)
 
 	//starting the web server
-	log.Println("Starting server on http://" + ipAddress.IP.String() + portNumber)
+	//below is the old code before adding the new server
+	infoLog.Println("Starting server on http://" + ipAddress.IP.String() + portNumber)
 	err := http.ListenAndServe(portNumber, mux)
-	log.Fatal(err)
+	errorLog.Fatal(err)
+
 }
