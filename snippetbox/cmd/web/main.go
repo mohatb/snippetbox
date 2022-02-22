@@ -60,8 +60,23 @@ func main() {
 
 	//starting the web server
 	//below is the old code before adding the new server
-	infoLog.Println("Starting server on http://" + ipAddress.IP.String() + portNumber)
-	err := http.ListenAndServe(portNumber, mux)
+	// infoLog.Println("Starting server on http://" + ipAddress.IP.String() + portNumber)
+	// err := http.ListenAndServe(portNumber, mux)
+	// errorLog.Fatal(err)
+
+	// Initialize a new http.Server struct. We set the Addr and Handler fields so
+	// that the server uses the same network address and routes as before, and set
+	// the ErrorLog field so that the server now uses the custom errorLog logger in
+	// the event of any problems.
+	srv := &http.Server{
+		ErrorLog: errorLog,
+		Handler:  mux,
+		Addr:     portNumber,
+	}
+
+	infoLog.Printf("Starting server on http://%s%s", ipAddress.IP.String(), portNumber)
+	// Call the ListenAndServe() method on our new http.Server struct.
+	err := srv.ListenAndServe()
 	errorLog.Fatal(err)
 
 }
