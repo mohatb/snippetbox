@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -52,7 +51,7 @@ func main() {
 
 	conn, error := net.Dial("udp", "8.8.8.8:80")
 	if error != nil {
-		fmt.Println(error)
+		errorLog.Println(error)
 
 	}
 	defer conn.Close()
