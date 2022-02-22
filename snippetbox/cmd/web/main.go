@@ -1,12 +1,11 @@
 package main
 
 import (
-	"log"
 	"net"
 	"net/http"
-	"os"
 
 	"github.com/mohatb/snippetbox/pkg/handlers"
+	"github.com/mohatb/snippetbox/pkg/logger"
 )
 
 const portNumber = ":4000"
@@ -19,18 +18,6 @@ func main() {
 	mux.HandleFunc("/about", handlers.About)
 	mux.HandleFunc("/snippet", handlers.ShowSnippet)
 	mux.HandleFunc("/snippet/create", handlers.CreateSnippet)
-
-	// Use log.New() to create a logger for writing information messages. This takes
-	// three parameters: the destination to write the logs to (os.Stdout), a string
-	// prefix for message (INFO followed by a tab), and flags to indicate what
-	// additional information to include (local date and time). Note that the flags
-	// are joined using the bitwise OR operator |.
-	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
-
-	// Create a logger for writing error messages in the same way, but use stderr as
-	// the destination and use the log.Lshortfile flag to include the relevant
-	// file name and line number.
-	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
 	// Create a file server which serves files out of the "./ui/static" directory.
 	// Note that the path given to the http.Dir function is relative to the project
@@ -51,7 +38,7 @@ func main() {
 
 	conn, error := net.Dial("udp", "8.8.8.8:80")
 	if error != nil {
-		errorLog.Println(error)
+		logger.ErrorLog.Println(error)
 
 	}
 	defer conn.Close()
@@ -68,14 +55,14 @@ func main() {
 	// the ErrorLog field so that the server now uses the custom errorLog logger in
 	// the event of any problems.
 	srv := &http.Server{
-		ErrorLog: errorLog,
+		ErrorLog: logger.ErrorLog,
 		Handler:  mux,
 		Addr:     portNumber,
 	}
 
-	infoLog.Printf("Starting server on http://%s%s", ipAddress.IP.String(), portNumber)
+	logger.InfoLog.Printf("Starting server on http://%s%s", ipAddress.IP.String(), portNumber)
 	// Call the ListenAndServe() method on our new http.Server struct.
 	err := srv.ListenAndServe()
-	errorLog.Fatal(err)
+	logger.ErrorLog.Fatal(err)
 
 }
