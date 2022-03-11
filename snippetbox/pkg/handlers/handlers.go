@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/mohatb/snippetbox/pkg/mysql"
 	"github.com/mohatb/snippetbox/pkg/render"
 )
 
@@ -35,27 +36,29 @@ func About(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// About is the about page handler
 func CreateSnippet(w http.ResponseWriter, r *http.Request) {
-	// Use r.Method to check whether the request is using POST or not. Note that
-	// http.MethodPost is a constant equal to the string "POST".
 	if r.Method != http.MethodPost {
-		// Use the Header().Set() method to add an 'Allow: POST' header to the
-		// response header map. The first parameter is the header name, and
-		// the second parameter is the header value.
 		w.Header().Set("Allow", http.MethodPost)
-		//you must call w.WriteHeader() before any call to w.Write()
-
-		//w.WriteHeader(405)
-		//w.Write([]byte("Method Not allowed"))
-		// Use the http.Error() function to send a 405 status code and "Method Not
-		// Allowed" string as the response body.
-
-		//below is a shortcut for the above.
-		http.Error(w, "Method Not Allowed", 405)
+		println(w, "createsnippet function error")
 		return
 	}
-	w.Write([]byte("Create Snippet"))
+
+	// Create some variables holding dummy data. We'll remove these later on
+	// during the build.
+	title := "O snail"
+	content := "O snail\nClimb Mount Fuji,\nBut slowly, slowly!\n\n– Kobayashi Issa"
+	expires := "7"
+
+	// Pass the data to the SnippetModel.Insert() method, receiving the
+	// ID of the new record back.
+	id, err := mysql.Insert(title, content, expires)
+	if err != nil {
+		println(w, "createsnippet function error")
+		return
+	}
+
+	// Redirect the user to the relevant page for the snippet.
+	http.Redirect(w, r, fmt.Sprintf("/snippet?id=%d", id), http.StatusSeeOther)
 }
 
 func ShowSnippet(w http.ResponseWriter, r *http.Request) {

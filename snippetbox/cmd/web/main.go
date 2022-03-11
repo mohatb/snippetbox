@@ -1,8 +1,6 @@
 package main
 
 import (
-	"database/sql"
-	"flag"
 	"net"
 	"net/http"
 
@@ -28,23 +26,6 @@ func main() {
 	defer conn.Close()
 	ipAddress := conn.LocalAddr().(*net.UDPAddr)
 
-	// Define a new command-line flag for the MySQL DSN string.
-	dsn := flag.String("dsn", "root:P@ssw0rd@/snippetbox?parseTime=true", "MySQL data source name")
-	flag.Parse()
-
-	//dsn := "web:pass@/" + ipAddress.IP.String() + "/snippetbox?parseTime=true"
-
-	// To keep the main() function tidy I've put the code for creating a connection
-	// pool into the separate openDB() function below. We pass openDB() the DSN
-	// from the command-line flag.
-	db, err := openDB(*dsn)
-	if err != nil {
-		logger.ErrorLog.Fatal(err)
-	}
-
-	// We also defer a call to db.Close(), so that the connection pool is closed
-	// before the main() function exits.
-	defer db.Close()
 	//starting the web server
 	//below is the old code before adding the new server
 	// infoLog.Println("Starting server on http://" + ipAddress.IP.String() + portNumber)
@@ -63,20 +44,7 @@ func main() {
 
 	logger.InfoLog.Printf("Starting server on http://%s%s", ipAddress.IP.String(), portNumber)
 	// Call the ListenAndServe() method on our new http.Server struct.
-	err = srv.ListenAndServe()
+	err := srv.ListenAndServe()
 	logger.ErrorLog.Fatal(err)
 
-}
-
-// The openDB() function wraps sql.Open() and returns a sql.DB connection pool
-// for a given DSN.
-func openDB(dsn string) (*sql.DB, error) {
-	db, err := sql.Open("mysql", dsn)
-	if err != nil {
-		return nil, err
-	}
-	if err = db.Ping(); err != nil {
-		return nil, err
-	}
-	return db, nil
 }
