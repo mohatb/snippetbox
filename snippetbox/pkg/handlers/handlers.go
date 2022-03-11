@@ -1,11 +1,14 @@
 package handlers
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"strconv"
 
+	"github.com/mohatb/snippetbox/pkg/logger"
+	"github.com/mohatb/snippetbox/pkg/models"
 	"github.com/mohatb/snippetbox/pkg/mysql"
 	"github.com/mohatb/snippetbox/pkg/render"
 )
@@ -53,7 +56,7 @@ func CreateSnippet(w http.ResponseWriter, r *http.Request) {
 	// ID of the new record back.
 	id, err := mysql.Insert(title, content, expires)
 	if err != nil {
-		println(w, "createsnippet function error")
+		logger.ErrorLog.Printf(err.Error())
 		return
 	}
 
@@ -62,27 +65,25 @@ func CreateSnippet(w http.ResponseWriter, r *http.Request) {
 }
 
 func ShowSnippet(w http.ResponseWriter, r *http.Request) {
-
-	// Extract the value of the id parameter from the query string and try to
-	// convert it to an integer using the strconv.Atoi() function. If it can't
-	// be converted to an integer, or the value is less than 1, we return a 404 page
-	// not found response.
-
-	//It needs to retrieve the value of the id parameter from the URL query string, which we
-	//can do using the r.URL.Query().Get() method. This will always return a string value for
-	//a parameter, or the empty string "" if no matching parameter exists.
 	id, err := strconv.Atoi(r.URL.Query().Get("id"))
 	if err != nil || id < 1 {
-		http.NotFound(w, r)
+		logger.ErrorLog.Println(err, w)
 		return
 	}
 
-	// Use the fmt.Fprintf() function to interpolate the id value with our response
-	// and write it to the http.ResponseWriter.
+	// Use the SnippetModel object's Get method to retrieve the data for a
+	// specific record based on its ID. If no matching record is found,
+	// return a 404 Not Found response.
+	s, err := mysql.Get(id)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			http.Error(w, err.Error(), http.StatusNotFound)
+		} else {
+			http.Error(w, err.Error(), http.StatusNotFound)
+		}
+		return
+	}
 
-	//We used fprintf takes an io.writer. this is because it is an interface, whenever you see io.writer it is fine to pass it http.responsewriter. below is the fprintf source
-	//func Fprintf(w io.Writer, format string, a ...interface{}) (n int, err error)
-	// this is why we passed it w which is a "http.responsewriter"
-
-	fmt.Fprintf(w, "Display a specific snippet with ID %d...", id)
+	// Write the snippet data as a plain-text HTTP response body.
+	fmt.Fprintf(w, "%v", s)
 }
